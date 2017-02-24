@@ -45,6 +45,7 @@ from xml.dom import Node as DomNode
 
 import rospkg
 
+from .loader import convert_value
 from .substitution_args import resolve_args
 
 NAME="roslaunch-deps"
@@ -98,11 +99,11 @@ def _parse_arg(tag, context):
     name = tag.attributes['name'].value
     if tag.attributes.has_key('if'):
         val = resolve_args(tag.attributes['if'].value, context)
-        if val == '1' or val == 'true':
+        if convert_value(val, 'bool'):
             return (name, _get_arg_value(tag, context))
     elif tag.attributes.has_key('unless'):
         val = resolve_args(tag.attributes['unless'].value, context)
-        if val == '0' or val == 'false':
+        if not convert_value(val, 'bool'):
             return (name, _get_arg_value(tag, context))
     else:
         return (name, _get_arg_value(tag, context))
@@ -142,6 +143,14 @@ def _parse_launch(tags, launch_file, file_deps, verbose, context):
                 (name, val) = v
                 context['arg'][name] = val
         elif tag.tagName == 'include':
+            if tag.attributes.has_key('if'):
+                val = resolve_args(tag.attributes['if'].value, context)
+                if not convert_value(val, 'bool'):
+                    continue
+            elif tag.attributes.has_key('unless'):
+                val = resolve_args(tag.attributes['unless'].value, context)
+                if convert_value(val, 'bool'):
+                    continue
             try:
                 sub_launch_file = resolve_args(tag.attributes['file'].value, context)
             except KeyError as e:

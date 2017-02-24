@@ -59,4 +59,7 @@
   <!-- more compact import syntax -->
   <include ns="included2" file="$(find roslaunch)/resources/example-include.launch" />
   
+  <!-- Pass over an include with an if-attribute that evaluates to false. -->
+  <arg name="dont_include_me" value="false" />
+  <include if="$(arg dont_include_me)" file="does/not/exist.launch" />
 </launch>
